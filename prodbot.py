@@ -16,7 +16,7 @@ import threading
 team_name="teamlinearalgebra"
 # This variable dictates whether or not the bot is connecting to the prod
 # or test exchange. Be careful with this switch!
-test_mode = True
+test_mode = False
 
 # This setting changes which test exchange is connected to.
 # 0 is prod-like
@@ -28,7 +28,7 @@ prod_exchange_hostname="production"
 port=25000 #+ (test_exchange_index if test_mode else 0)
 exchange_hostname = "test-exch-" + team_name if test_mode else prod_exchange_hostname
 
-holdings = []
+holdings = {}
 
 order_id = 42
 
@@ -71,7 +71,7 @@ def sell(exchange, symbol, price, size):
 
 def convert(exchange, buy, symbol, size):
     global order_id
-    keyvals = [("type","convert"),("order_id",order_id),("symbol",symbol),("dir",buy),("price",price),("size",size)]
+    keyvals = [("type","convert"),("order_id",order_id),("symbol",symbol),("dir",buy),("size",size)]
     write_to_exchange(exchange,json.loads(write_json(keyvals)))
 
     order_id += 1
@@ -104,7 +104,8 @@ def book_response(json_data):
     book[json_data['symbol']] = (json_data['buy'], json_data['sell'])
 
 def trade_response(json_data):
-    print("trade made:",json_data['symbol'],"|",json_data['price'],"|",json_data['size'])
+    #print("trade made:",json_data['symbol'],"|",json_data['price'],"|",json_data['size'])
+    pass
 
 def ack_response(json_data):
     print("acknowledged:", json_data['order_id'])
@@ -119,7 +120,9 @@ def out_response(json_data):
     print("out:", json_data['order_id'])
 
 def hello_response(json_data):
-    holdings = json_data['symbols']
+    holds = json_data['symbols']
+    for hold in holds:
+        holdings[hold['symbol']] = hold['position']
     print(holdings)
 
 def listen_for_responses():
@@ -164,35 +167,14 @@ def listen_for_responses():
 
 exchange = None
 
-def lowest_sell(tag):
-    offers = book[tag][1]
-    offers.sort(key=lambda x: x[0])
-    return offers[0]
+def trade_bond(exchange):
 
-def main():
-    global exchange
+    if not "BOND" in book:
+        return
 
-    exchange = connect()
-    hello(exchange)
+    if len(book['BOND'][0]) == 0 or len(book['BOND'][1]) == 0:
+        return
 
-    thread = threading.Thread(target=listen_for_responses)
-    thread.start()
-
-    print(thread.name)
-    print(thread.is_alive())
-
-    print("hello")
-
-    while True:
-        buy(exchange, "BOND", 999, 20)
-        time.sleep(0.3)
-        print(book)
-        print(lowest_sell("BOND"))
-
-if __name__ == "__main__":
-    main()
-
-def trade_bond(mp_bid, mp_offer, exchange):
     for bid in book["BOND"][0]:
         price = bid[0] 
         quantity = bid[1]
@@ -206,14 +188,41 @@ def trade_bond(mp_bid, mp_offer, exchange):
             buy(exchange, 'BOND', price, quantity)
 
 def trade_babs(exchange):
+
+    if not "BABZ" in book and not "BABA" in book:
+        return
+
+    if len(book['BABZ'][0]) or len(book['BABZ'][1]) == 0:
+        return
+
     babz_bid = book['BABZ'][0][0]
     babz_sell = book['BABZ'][1][0]
 
     baba_bid = book['BABA'][0][0]
     baba_sell = book['BABA'][1][0]
 
-    if baba_bid[1] * baba_offer[0] + 10 < babz_bid[0] * babz_bid[1]:
-        buy(exchange, 'BABA', baba_offer[0], min(10, baba_offer[1]))
-        convert(exchange, "BUY", 'BABZ', min(10, baba_offer[1]))
+    if baba_bid[1] * baba_sell[0] + 10 < babz_bid[0] * babz_bid[1]:
+        buy(exchange, 'BABA', baba_sell[0], min(10, baba_sell[1]))
+        convert(exchange, "BUY", 'BABA', min(10, baba_sell[1]))
         sell(exchange, 'BABZ', babz_bid[0], min(10, babz_bid[1]))
 
+
+def main():
+    global exchange
+
+    exchange = connect()
+    hello(exchange)
+
+    thread = threading.Thread(target=listen_for_responses)
+    thread.start()
+
+    print(thread.name)
+    print(thread.is_alive())
+
+    while True:
+        trade_bond(exchange)
+        trade_babs(exchange)
+        time.sleep(0.3)
+
+if __name__ == "__main__":
+    main()
