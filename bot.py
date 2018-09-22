@@ -44,7 +44,7 @@ def read_from_exchange(exchange):
     return json.loads(exchange.readline())
 
 def hello(exchange):
-    write_to_exchange(exchange,'{"type": "hello", "team":"TEAMLINEARALGEBRA"}\n')
+    write_to_exchange(exchange,'{"type": "hello", "team":"TEAMLINEARALGEBRA"}')
     json_output = read_from_exchange(exchange)
 
     for item in json_output.iteritems():
