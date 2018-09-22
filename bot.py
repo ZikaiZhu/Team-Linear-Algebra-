@@ -48,10 +48,7 @@ def hello(exchange):
     json_output = read_from_exchange(exchange)
 
     holdings = json_output['symbols']
-
-    for item in json_output.iteritems():
-        print(item)
-
+    print(holdings)
 
 # ~~~~~============== MAIN LOOP ==============~~~~~
 
