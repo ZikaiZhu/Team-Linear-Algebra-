@@ -34,6 +34,8 @@ order_id = 42
 
 orders = []
 
+standing_offers = []
+
 book = {}
 
 # ~~~~~============== NETWORKING CODE ==============~~~~~
@@ -95,7 +97,15 @@ def open_response(json_data):
     print("open symbols:",json_data['symbols'])
 
 def close_response(json_data):
+    global holdings, orders, book, order_id
     print("closed symbols:",json_data['symbols'])
+    holdings = {}
+
+    order_id = 42
+
+    orders = []
+
+    book = {}
 
 def error_response(json_data):
     print("ERROR:",json_data['error'])
@@ -109,15 +119,20 @@ def trade_response(json_data):
 
 def ack_response(json_data):
     print("acknowledged:", json_data['order_id'])
+    orders.append(json_data['order_id'])
 
 def reject_response(json_data):
     print("rejected:", json_data['order_id'], "|", json_data['error'])
+    if json_data['order_id'] in orders:
+        orders.remove(json_data['order_id'])
 
 def fill_response(json_data):
     print("filled:", json_data['order_id'], "|", json_data['symbol'],"|",json_data['price'],"|",json_data['size'])
 
 def out_response(json_data):
     print("out:", json_data['order_id'])
+    if json_data['order_id'] in orders:
+        orders.remove(json_data['order_id'])
 
 def hello_response(json_data):
     holds = json_data['symbols']
@@ -167,6 +182,11 @@ def listen_for_responses():
 
 exchange = None
 
+def standing_offers(exchange):
+    buy(exchange, 'BOND', 997, 10)
+    sell(exchange, 'BOND', 1003, 10)
+    
+
 def trade_bond(exchange):
 
     if not "BOND" in book:
@@ -192,7 +212,7 @@ def trade_babs(exchange):
     if not "BABZ" in book and not "BABA" in book:
         return
 
-    if len(book['BABZ'][0]) or len(book['BABZ'][1]) == 0:
+    if len(book['BABZ'][0]) or len(book['BABZ'][1]) == 0 or len(book['BABA'][0]) or len(book['BABA'][1]) == 0:
         return
 
     babz_bid = book['BABZ'][0][0]
@@ -206,6 +226,39 @@ def trade_babs(exchange):
         convert(exchange, "BUY", 'BABA', min(10, baba_sell[1]))
         sell(exchange, 'BABZ', babz_bid[0], min(10, babz_bid[1]))
 
+def trade_google(exchange):
+    if not "GOOG" in book and not "GOOG" in book:
+        return
+
+    if len(book['GOOG'][0]) == 0 or len(book['GOOG'][1]) == 0:
+        return
+
+    google_bid = book['GOOG'][0]
+    google_sell = book['GOOG'][1]
+    total_bid = 0
+    total_sell = 0
+    for i in range(0, len(google_bid)):
+        total_bid += google_bid[i][0]
+    for j in range(0, len(google_sell)):
+        total_sell += google_sell[j][0]
+    total_bid = float(total_bid ) / len(google_bid)
+    total_sell = float(total_sell) / len(google_bid)
+    fair_val = 0
+    fair_val = (total_bid + total_sell)/2.0
+
+    print(fair_val)
+
+    for bid in book['GOOG'][0]:
+        price = bid[0]
+        quantity = bid[1]
+        if price > fair_val:
+            sell(exchange, 'GOOG', price, quantity)
+    for bid in book["GOOG"][1]:
+        price = bid[0]
+        quantity = bid[1]
+        if price < fair_val:
+            buy(exchange, 'GOOG', price, quantity)
+
 
 def main():
     global exchange
@@ -216,13 +269,25 @@ def main():
     thread = threading.Thread(target=listen_for_responses)
     thread.start()
 
-    print(thread.name)
-    print(thread.is_alive())
+    iteration = 0
 
     while True:
         trade_bond(exchange)
         trade_babs(exchange)
+        trade_google(exchange)
         time.sleep(0.3)
+
+        iteration += 1
+        iteration = iteration % 5
+
+        if iteration == 0:
+            for order_id in orders:
+                cancel(exchange, order_id)
+            standing_offers(exchange)
+
+        if iteration == 0 and len(book) == 0:
+            exchange = connect()
+            hello(exchange)
 
 if __name__ == "__main__":
     main()
