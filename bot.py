@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2.7
 
 # ~~~~~==============   HOW TO RUN   ==============~~~~~
 # 1) Configure things in CONFIGURATION section
@@ -46,8 +46,7 @@ def hello(exchange):
     json_output = read_from_exchange(exchange)
 
     holdings = json_output['symbols']
-
-print holdings
+    print holdings
 
 
 # ~~~~~============== MAIN LOOP ==============~~~~~
