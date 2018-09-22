@@ -8,7 +8,6 @@ def hello():
 
     holdings = response_dicts[0]['symbols']
 
-    holdings = json_data['symbols']
     print holdings
 
 team_name = "TEAMLINEARALGEBRA"
