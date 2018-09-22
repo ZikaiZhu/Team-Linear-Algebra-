@@ -2,7 +2,7 @@ import socket
 import json
 
 def hello():
-    s.send('{"type": "hello", "team":"TEAMLINEARALGEBRA"}')
+    s.send('{"type": "hello", "team":"TEAMLINEARALGEBRA"}\n')
     response = s.recv(BUFFER_SIZE)
     json_data = json.loads(response)
     print json_data
