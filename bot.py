@@ -44,7 +44,7 @@ def read_from_exchange(exchange):
     return json.loads(exchange.readline())
 
 def hello(exchange):
-    s.send('{"type": "hello", "team":"TEAMLINEARALGEBRA"}\n')
+    write_to_exchange(exchange,'{"type": "hello", "team":"TEAMLINEARALGEBRA"}\n')
     json_output = read_from_exchange(exchange)
 
     holdings = json_output['symbols']
@@ -57,13 +57,7 @@ def hello(exchange):
 
 def main():
     exchange = connect()
-    write_to_exchange(exchange, {"type": "hello", "team": team_name.upper()})
-    hello_from_exchange = read_from_exchange(exchange)
-    # A common mistake people make is to call write_to_exchange() > 1
-    # time for every read_from_exchange() response.
-    # Since many write messages generate marketdata, this will cause an
-    # exponential explosion in pending messages. Please, don't do that!
-    print("The exchange replied:", hello_from_exchange, file=sys.stderr)
+    hello(exchange)
 
 if __name__ == "__main__":
     main()
