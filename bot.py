@@ -48,7 +48,7 @@ def hello(exchange):
     json_output = read_from_exchange(exchange)
 
     holdings = json_output['symbols']
-    print holdings
+    print(holdings)
 
 
 # ~~~~~============== MAIN LOOP ==============~~~~~
