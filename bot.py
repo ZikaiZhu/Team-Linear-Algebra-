@@ -4,10 +4,10 @@ import json
 def hello():
     s.send('{"type": "hello", "team":"TEAMLINEARALGEBRA"}\n')
     response = s.recv(BUFFER_SIZE)
-    print response
-    last_pos = response.rfind('}') #find end
-    json_data = json.loads(response[:last_pos+1])
-    print json_data
+    response_dicts = response.split("\n")
+
+    holdings = response_dicts[0]['symbols']
+
     holdings = json_data['symbols']
     print holdings
 
