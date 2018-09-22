@@ -19,7 +19,7 @@ prod_port = 25000
 slower_port = 25001
 empty_port = 25002
 
-BUFFER_SIZE = 1024
+BUFFER_SIZE = 4096
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((test_ip,prod_port))
