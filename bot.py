@@ -41,8 +41,18 @@ def write_to_exchange(exchange, obj):
 def read_from_exchange(exchange):
     return json.loads(exchange.readline())
 
+def hello(exchange):
+    s.send('{"type": "hello", "team":"TEAMLINEARALGEBRA"}\n')
+    json_output = read_from_exchange(exchange)
+
+    holdings = json_output['symbols']
+
+print holdings
+
 
 # ~~~~~============== MAIN LOOP ==============~~~~~
+
+holdings = []
 
 def main():
     exchange = connect()
