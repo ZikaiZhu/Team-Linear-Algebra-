@@ -84,6 +84,9 @@ def write_json(keyvallist):
     string = string[:-2]
     string += "}"
     return string
+
+def listen_for_responses(exchange):
+    
     
 
 # ~~~~~============== MAIN LOOP ==============~~~~~
@@ -96,3 +99,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+def trade_bond(mp_bid, mp_offer, exchange):
+    if mp_offer['price'] > 1000:
+        sell(exchange, 'BOND', mp_offer['price'], mp_offer['size'])
+    if mp_bid['price'] < 1000:
+        buy(exchange, 'BOND', mp_bid['price'], mp_bid['size'])
