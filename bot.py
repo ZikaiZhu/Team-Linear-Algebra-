@@ -5,6 +5,7 @@ def hello():
     s.send("HELLO " + team_name + "\n")
     response = s.recv(BUFFER_SIZE)
     json_data = json.loads(response)
+    print json_data
     holdings = json_data['symbols']
     print holdings
 
