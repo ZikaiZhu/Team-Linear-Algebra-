@@ -30,6 +30,10 @@ exchange_hostname = "test-exch-" + team_name if test_mode else prod_exchange_hos
 
 holdings = []
 
+order_id = 42
+
+orders = []
+
 # ~~~~~============== NETWORKING CODE ==============~~~~~
 def connect():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -49,6 +53,24 @@ def hello(exchange):
 
     holdings = json_output['symbols']
     print(holdings)
+
+def buy(exchange, symbol, price, size):
+    keyvals = [("type","add"),("order_id",order_id),("symbol",symbol),("dir":"BUY"),("price",price),("size":size)]
+    write_to_exchange(exchange,json.loads(write_json(keyvals)))
+    order_id += 1
+
+def sell(exchange, symbol, price, size):
+    pass
+
+def convert(exchange, symbol, size):
+    pass
+
+def cancel(exchange, order_id):
+    pass
+
+def write_json(keyvallist):
+    pass
+    
 
 # ~~~~~============== MAIN LOOP ==============~~~~~
 
