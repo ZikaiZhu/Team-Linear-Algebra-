@@ -10,6 +10,8 @@ from __future__ import print_function
 import sys
 import socket
 import json
+import time
+import _thread
 
 # ~~~~~============== CONFIGURATION  ==============~~~~~
 # replace REPLACEME with your team name!
@@ -34,6 +36,8 @@ order_id = 42
 
 orders = []
 
+book = []
+
 # ~~~~~============== NETWORKING CODE ==============~~~~~
 def connect():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -55,19 +59,19 @@ def hello(exchange):
     print(holdings)
 
 def buy(exchange, symbol, price, size):
-    keyvals = [("type","add"),("order_id",order_id),("symbol",symbol),("dir","BUY"),("price",price),("size":size)]
+    keyvals = [("type","add"),("order_id",order_id),("symbol",symbol),("dir","BUY"),("price",price),("size",size)]
     write_to_exchange(exchange,json.loads(write_json(keyvals)))
     orders.append(order_id)
     order_id += 1
 
 def sell(exchange, symbol, price, size):
-    keyvals = [("type","add"),("order_id",order_id),("symbol",symbol),("dir","SELL"),("price",price),("size":size)]
+    keyvals = [("type","add"),("order_id",order_id),("symbol",symbol),("dir","SELL"),("price",price),("size",size)]
     write_to_exchange(exchange,json.loads(write_json(keyvals)))
     orders.append(order_id)
     order_id += 1
 
 def convert(exchange, buy, order_id, symbol, size):
-    keyvals = [("type","convert"),("order_id",order_id),("symbol",symbol),("dir",buy),("price",price),("size":size)]
+    keyvals = [("type","convert"),("order_id",order_id),("symbol",symbol),("dir",buy),("price",price),("size",size)]
     write_to_exchange(exchange,json.loads(write_json(keyvals)))
 
 def cancel(exchange, order_id):
@@ -85,7 +89,54 @@ def write_json(keyvallist):
     string += "}"
     return string
 
+def open_response(json_data):
+    print("open symbols:",json_data['symbols'])
+
+def close_response(json_data):
+    print("closed symbols:",json_data['symbols'])
+
+def error_response(json_data):
+    print("ERROR:",json_data['error'],file=sys.stderr)
+
+def book_response(json_data):
+    book[json_data['symbol']] = (json_data['buy'], json_data['sell'])
+
+def trade_response(json_data):
+    print("trade made:",json_data['symbol'],"|",json_data['price'],"|",json_data['size'])
+
+def ack_response(json_data):
+    print("acknowledged:", json_data['order_id'])
+
+def reject_response(json_data):
+    print("rejected:", json_data['order_id'], "|", json_data['error'], file=sys.stderr)
+
+def fill_response(json_data):
+    print("filled:", json_data['order_id'], "|", json_data['symbol'],"|",json_data['price'],"|",json_data['size'])
+
+def out_response(json_data):
+    print("out:", json_data['order_id'])
+
 def listen_for_responses(exchange):
+    while 1:
+        data = read_from_exchange(exchange)
+        if data['type'] == "open":
+            open_response(data)
+        if data['type'] == "close":
+            close_response(data)
+        if data['type'] == "error":
+            error_response(data)
+        if data['type'] == "book":
+            book_response(data)
+        if data['type'] == "trade":
+            trade_response(data)
+        if data['type'] == "ack":
+            ack_response(data)
+        if data['type'] == "reject":
+            reject_response(data)
+        if data['type'] == "fill":
+            fill_response(data)
+        if data['type'] == "out":
+            out_response(data)
     
     
 
@@ -96,6 +147,11 @@ def listen_for_responses(exchange):
 def main():
     exchange = connect()
     hello(exchange)
+
+    try:
+        _thread.start_new_thread(listen_for_responses, (exchange))
+    except:
+        print ("error!")
 
 if __name__ == "__main__":
     main()
