@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/python3
 
 # ~~~~~==============   HOW TO RUN   ==============~~~~~
 # 1) Configure things in CONFIGURATION section
