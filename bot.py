@@ -5,13 +5,11 @@
 # 2) Change permissions: chmod +x bot.py
 # 3) Run in loop: while true; do ./bot.py; sleep 1; done
 
-from __future__ import print_function
-
 import sys
 import socket
 import json
 import time
-import _thread
+import threading
 
 # ~~~~~============== CONFIGURATION  ==============~~~~~
 # replace REPLACEME with your team name!
@@ -27,7 +25,7 @@ test_mode = True
 test_exchange_index=2
 prod_exchange_hostname="production"
 
-port=25000 + (test_exchange_index if test_mode else 0)
+port=25000 #+ (test_exchange_index if test_mode else 0)
 exchange_hostname = "test-exch-" + team_name if test_mode else prod_exchange_hostname
 
 holdings = []
@@ -36,9 +34,10 @@ order_id = 42
 
 orders = []
 
-book = []
+book = {}
 
 # ~~~~~============== NETWORKING CODE ==============~~~~~
+
 def connect():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((exchange_hostname, port))
@@ -53,18 +52,18 @@ def read_from_exchange(exchange):
 
 def hello(exchange):
     write_to_exchange(exchange,json.loads('{"type": "hello", "team": "TEAMLINEARALGEBRA"}'))
-    json_output = read_from_exchange(exchange)
-
-    holdings = json_output['symbols']
-    print(holdings)
 
 def buy(exchange, symbol, price, size):
+    global order_id
+
     keyvals = [("type","add"),("order_id",order_id),("symbol",symbol),("dir","BUY"),("price",price),("size",size)]
     write_to_exchange(exchange,json.loads(write_json(keyvals)))
     orders.append(order_id)
     order_id += 1
 
 def sell(exchange, symbol, price, size):
+    global order_id
+
     keyvals = [("type","add"),("order_id",order_id),("symbol",symbol),("dir","SELL"),("price",price),("size",size)]
     write_to_exchange(exchange,json.loads(write_json(keyvals)))
     orders.append(order_id)
@@ -96,7 +95,7 @@ def close_response(json_data):
     print("closed symbols:",json_data['symbols'])
 
 def error_response(json_data):
-    print("ERROR:",json_data['error'],file=sys.stderr)
+    print("ERROR:",json_data['error'])
 
 def book_response(json_data):
     book[json_data['symbol']] = (json_data['buy'], json_data['sell'])
@@ -108,7 +107,7 @@ def ack_response(json_data):
     print("acknowledged:", json_data['order_id'])
 
 def reject_response(json_data):
-    print("rejected:", json_data['order_id'], "|", json_data['error'], file=sys.stderr)
+    print("rejected:", json_data['order_id'], "|", json_data['error'])
 
 def fill_response(json_data):
     print("filled:", json_data['order_id'], "|", json_data['symbol'],"|",json_data['price'],"|",json_data['size'])
@@ -116,9 +115,24 @@ def fill_response(json_data):
 def out_response(json_data):
     print("out:", json_data['order_id'])
 
-def listen_for_responses(exchange):
-    while 1:
-        data = read_from_exchange(exchange)
+def hello_response(json_data):
+    holdings = json_data['symbols']
+    print(holdings)
+
+def listen_for_responses():
+
+    global exchange
+
+    while True:
+
+        f = exchange.readline()
+
+        if not f:
+            time.sleep(1)
+            continue
+
+        data = json.loads(f)
+
         if data['type'] == "open":
             open_response(data)
         if data['type'] == "close":
@@ -137,21 +151,41 @@ def listen_for_responses(exchange):
             fill_response(data)
         if data['type'] == "out":
             out_response(data)
+        if data['type'] == "hello":
+            hello_response(data)
     
     
 
 # ~~~~~============== MAIN LOOP ==============~~~~~
 
 
+exchange = None
+
+def lowest_sell(tag):
+    offers = book[tag][1]
+    offers = sorted(offers, key=lambda x: x[0])
+    print(offers[0])
+    
 
 def main():
+    global exchange
+
     exchange = connect()
     hello(exchange)
 
-    try:
-        _thread.start_new_thread(listen_for_responses, (exchange))
-    except:
-        print ("error!")
+    thread = threading.Thread(target=listen_for_responses)
+    thread.start()
+
+    print(thread.name)
+    print(thread.is_alive())
+
+    print("hello")
+
+    buy(exchange, "BOND", 1008, 20)
+
+    while True:
+        time.sleep(1)
+        print lowest_sell("BOND")
 
 if __name__ == "__main__":
     main()
