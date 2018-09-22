@@ -1,6 +1,13 @@
 import socket
 import json
 
+def hello():
+    s.send("HELLO " + team_name)
+    response = s.recv(BUFFER_SIZE)
+    json_data = json.JSONDecoder.decode(response)
+    holdings = json_data['symbols']
+    print holdings
+
 team_name = "TEAMLINEARALGEBRA"
 
 test_ip = "10.0.80.173"
@@ -18,11 +25,6 @@ holdings = []
 
 hello()
 
-def hello():
-    s.send("HELLO " + team_name)
-    response = s.recv(BUFFER_SIZE)
-    json_data = json.JSONDecoder.decode(response)
-    holdings = json_data['symbols']
-    print holdings
+
     
     
