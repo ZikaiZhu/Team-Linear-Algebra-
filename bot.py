@@ -4,6 +4,7 @@ import json
 def hello():
     s.send('{"type": "hello", "team":"TEAMLINEARALGEBRA"}\n')
     response = s.recv(BUFFER_SIZE)
+    print response
     last_pos = response.rfind('}') #find end
     json_data = json.loads(response[:last_pos+1])
     print json_data
