@@ -16,6 +16,8 @@ s.connect((test_ip,prod_port))
 
 holdings = []
 
+hello()
+
 def hello():
     s.send("HELLO " + team_name)
     response = s.recv(BUFFER_SIZE)
