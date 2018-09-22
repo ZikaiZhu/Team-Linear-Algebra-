@@ -28,6 +28,8 @@ prod_exchange_hostname="production"
 port=25000 + (test_exchange_index if test_mode else 0)
 exchange_hostname = "test-exch-" + team_name if test_mode else prod_exchange_hostname
 
+holdings = []
+
 # ~~~~~============== NETWORKING CODE ==============~~~~~
 def connect():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -51,7 +53,7 @@ def hello(exchange):
 
 # ~~~~~============== MAIN LOOP ==============~~~~~
 
-holdings = []
+
 
 def main():
     exchange = connect()
