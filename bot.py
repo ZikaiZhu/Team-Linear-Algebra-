@@ -4,7 +4,7 @@ import json
 def hello():
     s.send("HELLO " + team_name + "\n")
     response = s.recv(BUFFER_SIZE)
-    json_data = json.JSONDecoder.decode(response)
+    json_data = json.loads(response)
     holdings = json_data['symbols']
     print holdings
 
