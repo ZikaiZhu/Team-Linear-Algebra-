@@ -5,14 +5,14 @@ team_name = "TEAMLINEARALGEBRA"
 
 test_ip = "10.0.80.173"
 
-prod-like_port = 25000
-slower_port = 25000
-empty_port = 25000
+prod_port = 25000
+slower_port = 25001
+empty_port = 25002
 
 BUFFER_SIZE = 1024
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect((test_ip,prod-like_port))
+s.connect((test_ip,prod_port))
 
 holdings = []
 
