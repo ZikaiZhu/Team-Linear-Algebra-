@@ -2,7 +2,7 @@ import socket
 import json
 
 def hello():
-    s.send("HELLO " + team_name)
+    s.send("HELLO " + team_name + "\n")
     response = s.recv(BUFFER_SIZE)
     json_data = json.JSONDecoder.decode(response)
     holdings = json_data['symbols']
