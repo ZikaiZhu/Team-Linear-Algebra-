@@ -55,21 +55,35 @@ def hello(exchange):
     print(holdings)
 
 def buy(exchange, symbol, price, size):
-    keyvals = [("type","add"),("order_id",order_id),("symbol",symbol),("dir":"BUY"),("price",price),("size":size)]
+    keyvals = [("type","add"),("order_id",order_id),("symbol",symbol),("dir","BUY"),("price",price),("size":size)]
     write_to_exchange(exchange,json.loads(write_json(keyvals)))
+    orders.append(order_id)
     order_id += 1
 
 def sell(exchange, symbol, price, size):
-    pass
+    keyvals = [("type","add"),("order_id",order_id),("symbol",symbol),("dir","SELL"),("price",price),("size":size)]
+    write_to_exchange(exchange,json.loads(write_json(keyvals)))
+    orders.append(order_id)
+    order_id += 1
 
-def convert(exchange, symbol, size):
-    pass
+def convert(exchange, buy, order_id, symbol, size):
+    keyvals = [("type","convert"),("order_id",order_id),("symbol",symbol),("dir",buy),("price",price),("size":size)]
+    write_to_exchange(exchange,json.loads(write_json(keyvals)))
 
 def cancel(exchange, order_id):
-    pass
+    keyvals = [("type","cancel"),("order_id",order_id)]
+    write_to_exchange(exchange,json.loads(write_json(keyvals)))
+    orders.remove(order_id)
 
 def write_json(keyvallist):
-    pass
+    string = "{"
+    for (a,b) in keyvallist:
+        if isinstance(b, str):
+            b = '"'+b+'"'
+        string += ('"' + a +'" : '+str(b)+', ')
+    string = string[:-2]
+    string += "}"
+    return string
     
 
 # ~~~~~============== MAIN LOOP ==============~~~~~
