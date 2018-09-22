@@ -47,8 +47,7 @@ def hello(exchange):
     write_to_exchange(exchange,'{"type": "hello", "team":"TEAMLINEARALGEBRA"}\n')
     json_output = read_from_exchange(exchange)
 
-    holdings = json_output['symbols']
-    print(holdings)
+    print(json_output.iteritems())
 
 
 # ~~~~~============== MAIN LOOP ==============~~~~~
